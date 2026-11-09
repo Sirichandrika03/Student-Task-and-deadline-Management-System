@@ -1,0 +1,605 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard{% endblock %}
+{% block page_heading %}Academic Dashboard{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+
+    <!-- ADS Execution Notification Banner -->
+    {% if ads_applied %}
+    <div class="ads-banner animate-fade-in">
+        <div class="ads-banner-badge">
+            <i class="fa-solid fa-microchip"></i> ADS Algorithm Executed in C
+        </div>
+        <div class="ads-banner-content">
+            <h4>{{ ads_applied.name }} &bull; <span class="complexity-pill">{{ ads_applied.time_complexity }}</span></h4>
+            <p>{{ ads_applied.message }}</p>
+        </div>
+        <a href="{{ url_for('dashboard') }}" class="btn-sm btn-ghost" title="Reset to standard order">
+            <i class="fa-solid fa-rotate-left"></i> Reset View
+        </a>
+    </div>
+    {% endif %}
+
+    <!-- Urgent Overdue/Deadline Alert Banner (if any) -->
+    {% if stats.overdue > 0 or stats.urgent_48h > 0 %}
+    <div class="urgent-deadline-banner animate-fade-in">
+        <div class="urgent-icon">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+        </div>
+        <div class="urgent-text">
+            <strong>Attention Required:</strong> You have 
+            {% if stats.overdue > 0 %}<span class="highlight-red">{{ stats.overdue }} overdue task(s)</span>{% endif %}
+            {% if stats.overdue > 0 and stats.urgent_48h > 0 %} and {% endif %}
+            {% if stats.urgent_48h > 0 %}<span class="highlight-amber">{{ stats.urgent_48h }} task(s) due within 48 hours</span>{% endif %}.
+        </div>
+        <div class="urgent-action">
+            <a href="{{ url_for('dashboard', sort='deadline_merge_sort') }}" class="btn btn-sm btn-white">
+                <i class="fa-solid fa-arrow-down-short-wide"></i> Sort by Urgency (C Merge Sort)
+            </a>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Metric Statistics Grid -->
+    <section class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon icon-purple">
+                <i class="fa-solid fa-list-check"></i>
+            </div>
+            <div class="stat-details">
+                <span class="stat-label">Total Tasks</span>
+                <h3 class="stat-number">{{ stats.total }}</h3>
+                <span class="stat-hint">Active in database</span>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon icon-green">
+                <i class="fa-solid fa-circle-check"></i>
+            </div>
+            <div class="stat-details">
+                <span class="stat-label">Completed</span>
+                <h3 class="stat-number">{{ stats.completed }}</h3>
+                <span class="stat-hint">{{ stats.completion_rate }}% completion rate</span>
+            </div>
+            <div class="stat-progress-bar">
+                <div class="progress-fill" style="width: {{ stats.completion_rate }}%;"></div>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon icon-blue">
+                <i class="fa-solid fa-hourglass-half"></i>
+            </div>
+            <div class="stat-details">
+                <span class="stat-label">Pending Tasks</span>
+                <h3 class="stat-number">{{ stats.pending }}</h3>
+                <span class="stat-hint">
+                    <span class="badge-dot red"></span> {{ stats.high_pending }} High 
+                    <span class="badge-dot orange"></span> {{ stats.med_pending }} Med
+                </span>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon icon-rose">
+                <i class="fa-solid fa-fire"></i>
+            </div>
+            <div class="stat-details">
+                <span class="stat-label">High Priority / Urgent</span>
+                <h3 class="stat-number">{{ stats.high_pending }}</h3>
+                <span class="stat-hint">{{ stats.urgent_48h }} due in 48h</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- Analytics & Calendar Overview Row -->
+    <section class="analytics-row">
+        <!-- Progress Doughnut Chart -->
+        <div class="analytics-card chart-card">
+            <div class="card-header">
+                <h4><i class="fa-solid fa-chart-pie"></i> Task Progress & Breakdown</h4>
+                <span class="badge-soft">Live Analytics</span>
+            </div>
+            <div class="chart-wrapper">
+                <canvas id="progressChart" height="180"></canvas>
+            </div>
+            <div class="chart-legend">
+                <div class="legend-item"><span class="legend-color completed"></span> Completed: {{ stats.completed }}</div>
+                <div class="legend-item"><span class="legend-color pending"></span> Pending: {{ stats.pending }}</div>
+            </div>
+        </div>
+
+        <!-- Priority Breakdown Bar Chart -->
+        <div class="analytics-card chart-card">
+            <div class="card-header">
+                <h4><i class="fa-solid fa-chart-column"></i> Priority Distribution</h4>
+                <span class="badge-soft">ADS Heap Metrics</span>
+            </div>
+            <div class="chart-wrapper">
+                <canvas id="priorityChart" height="180"></canvas>
+            </div>
+            <div class="chart-legend">
+                <div class="legend-item"><span class="legend-color prio-high"></span> High: {{ stats.high_pending }}</div>
+                <div class="legend-item"><span class="legend-color prio-med"></span> Medium: {{ stats.med_pending }}</div>
+                <div class="legend-item"><span class="legend-color prio-low"></span> Low: {{ stats.low_pending }}</div>
+            </div>
+        </div>
+
+        <!-- Mini Calendar / Upcoming Schedule Card -->
+        <div class="analytics-card calendar-card">
+            <div class="card-header">
+                <h4><i class="fa-solid fa-calendar-days"></i> Deadline Calendar</h4>
+                <span class="badge-soft">{{ now.strftime('%B %Y') }}</span>
+            </div>
+            <div class="mini-calendar" id="miniCalendar">
+                <!-- Built dynamically via JavaScript -->
+            </div>
+        </div>
+    </section>
+
+    <!-- C Algorithms Quick Action Toolbar -->
+    <section class="ads-quick-toolbar">
+        <div class="toolbar-label">
+            <i class="fa-solid fa-brain"></i>
+            <span>ADS Algorithm Actions:</span>
+        </div>
+        <div class="toolbar-buttons">
+            <a href="{{ url_for('dashboard', sort='deadline_merge_sort', status=status_filter, priority=priority_filter, subject_id=subject_filter) }}" 
+               class="btn-ads {% if sort_mode == 'deadline_merge_sort' %}active{% endif %}" title="Executes algorithms/merge_sort.c">
+                <i class="fa-solid fa-arrow-down-short-wide"></i> C Merge Sort Deadlines [O(n log n)]
+            </a>
+            <a href="{{ url_for('dashboard', sort='priority_heap', status=status_filter, priority=priority_filter, subject_id=subject_filter) }}" 
+               class="btn-ads {% if sort_mode == 'priority_heap' %}active{% endif %}" title="Executes algorithms/priority_queue.c">
+                <i class="fa-solid fa-layer-group"></i> C Priority Max-Heap [O(log n)]
+            </a>
+            <button class="btn-ads" onclick="openBinarySearchModal()" title="Executes algorithms/binary_search.c">
+                <i class="fa-solid fa-magnifying-glass"></i> C Binary Search ID [O(log n)]
+            </button>
+            <a href="{{ url_for('algorithms_hub') }}" class="btn-ads btn-ads-hub" title="Open full ADS playground">
+                <i class="fa-solid fa-vial-virus"></i> ADS Playground Hub &rarr;
+            </a>
+        </div>
+    </section>
+
+    <!-- Tasks Filter & Search Bar -->
+    <section class="filter-search-card">
+        <form method="GET" action="{{ url_for('dashboard') }}" class="filter-form">
+            <!-- Search Keyword -->
+            <div class="filter-group search-group">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="text" name="search" value="{{ search_query }}" placeholder="Search tasks by title, description, subject..." class="form-control">
+            </div>
+
+            <!-- Status Filter -->
+            <div class="filter-group">
+                <label>Status:</label>
+                <select name="status" class="form-select" onchange="this.form.submit()">
+                    <option value="All" {% if status_filter == 'All' %}selected{% endif %}>All Tasks</option>
+                    <option value="Pending" {% if status_filter == 'Pending' %}selected{% endif %}>Pending</option>
+                    <option value="Completed" {% if status_filter == 'Completed' %}selected{% endif %}>Completed</option>
+                </select>
+            </div>
+
+            <!-- Priority Filter -->
+            <div class="filter-group">
+                <label>Priority:</label>
+                <select name="priority" class="form-select" onchange="this.form.submit()">
+                    <option value="All" {% if priority_filter == 'All' %}selected{% endif %}>All Priorities</option>
+                    <option value="High" {% if priority_filter == 'High' %}selected{% endif %}>High (Max Heap)</option>
+                    <option value="Medium" {% if priority_filter == 'Medium' %}selected{% endif %}>Medium</option>
+                    <option value="Low" {% if priority_filter == 'Low' %}selected{% endif %}>Low</option>
+                </select>
+            </div>
+
+            <!-- Subject Filter -->
+            <div class="filter-group">
+                <label>Subject:</label>
+                <select name="subject_id" class="form-select" onchange="this.form.submit()">
+                    <option value="All" {% if subject_filter == 'All' %}selected{% endif %}>All Subjects</option>
+                    {% for subj in subjects %}
+                    <option value="{{ subj.subject_id }}" {% if subject_filter|string == subj.subject_id|string %}selected{% endif %}>
+                        {{ subj.subject_code }} - {{ subj.subject_name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <input type="hidden" name="sort" value="{{ sort_mode }}">
+
+            <div class="filter-actions">
+                <button type="submit" class="btn btn-secondary">Filter</button>
+                {% if search_query or status_filter != 'All' or priority_filter != 'All' or subject_filter != 'All' or sort_mode != 'default' %}
+                <a href="{{ url_for('dashboard') }}" class="btn btn-ghost" title="Clear Filters">
+                    <i class="fa-solid fa-xmark"></i> Clear
+                </a>
+                {% endif %}
+            </div>
+        </form>
+    </section>
+
+    <!-- Main Tasks Layout: Tasks Grid & Stack Sidebar -->
+    <div class="tasks-layout">
+        <!-- Task Cards Grid -->
+        <div class="tasks-main-column">
+            <div class="column-header">
+                <h3>
+                    <i class="fa-solid fa-list-check"></i> Academic Tasks 
+                    <span class="badge-count">{{ tasks|length }}</span>
+                </h3>
+                <div class="header-tools">
+                    <button class="btn btn-sm btn-outline" onclick="openAddSubjectModal()">
+                        <i class="fa-solid fa-book-open"></i> Manage Subjects
+                    </button>
+                    <button class="btn btn-sm btn-primary" onclick="openAddTaskModal()">
+                        <i class="fa-solid fa-plus"></i> Add Task
+                    </button>
+                </div>
+            </div>
+
+            {% if tasks %}
+            <div class="tasks-grid">
+                {% for t in tasks %}
+                <div class="task-card status-{{ t.status.lower() }} prio-border-{{ t.priority.lower() }}" id="task-card-{{ t.task_id }}">
+                    <!-- Card Top Header -->
+                    <div class="task-card-top">
+                        <div class="task-id-badge">#{{ t.task_id }}</div>
+                        <div class="task-pills">
+                            <span class="badge-priority priority-{{ t.priority.lower() }}">
+                                <i class="fa-solid fa-circle"></i> {{ t.priority }}
+                            </span>
+                            {% if t.subject_code %}
+                            <span class="badge-subject" title="{{ t.subject_name }}">{{ t.subject_code }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Card Body -->
+                    <div class="task-card-body">
+                        <h4 class="task-title {% if t.status == 'Completed' %}strikethrough{% endif %}">{{ t.title }}</h4>
+                        {% if t.description %}
+                        <p class="task-desc">{{ t.description }}</p>
+                        {% endif %}
+                    </div>
+
+                    <!-- Card Deadline & Meta -->
+                    <div class="task-card-meta">
+                        <div class="task-deadline">
+                            <i class="fa-regular fa-calendar"></i>
+                            <span>Due: {{ t.deadline_str if t.deadline_str else t.deadline }}</span>
+                        </div>
+                        <div class="task-status-pill status-{{ t.status.lower() }}">
+                            <i class="fa-solid {% if t.status == 'Completed' %}fa-circle-check{% else %}fa-clock{% endif %}"></i>
+                            {{ t.status }}
+                        </div>
+                    </div>
+
+                    <!-- Card Bottom Actions -->
+                    <div class="task-card-actions">
+                        <form method="POST" action="{{ url_for('toggle_task', task_id=t.task_id) }}" style="display:inline;">
+                            {% if t.status == 'Pending' %}
+                            <button type="submit" class="btn-action btn-complete" title="Mark as Completed (Push to C Stack)">
+                                <i class="fa-solid fa-check"></i> Complete
+                            </button>
+                            {% else %}
+                            <button type="submit" class="btn-action btn-reopen" title="Reopen as Pending">
+                                <i class="fa-solid fa-rotate-left"></i> Reopen
+                            </button>
+                            {% endif %}
+                        </form>
+
+                        <div class="action-buttons-group">
+                            <button type="button" class="btn-icon" title="Edit Task" 
+                                    onclick='openEditTaskModal({{ t.task_id }}, {{ t.title|tojson }}, {{ t.description|tojson }}, {{ t.priority|tojson }}, {{ t.deadline_iso|tojson if t.deadline_iso else ""|tojson }}, {{ t.subject_id if t.subject_id else "null" }})'>
+                                <i class="fa-solid fa-pen-to-square"></i>
+                            </button>
+                            <form method="POST" action="{{ url_for('delete_task_route', task_id=t.task_id) }}" onsubmit="return confirm('Delete Task #{{ t.task_id }}? (Removes node from C Linked List)');" style="display:inline;">
+                                <button type="submit" class="btn-icon btn-icon-danger" title="Delete Task">
+                                    <i class="fa-solid fa-trash-can"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <!-- Empty State -->
+            <div class="empty-state-card">
+                <div class="empty-illustration">
+                    <i class="fa-solid fa-clipboard-check"></i>
+                </div>
+                <h3>No Tasks Found</h3>
+                <p>No tasks matched your active filter or search query. Create a new academic task to get started!</p>
+                <button class="btn btn-primary" onclick="openAddTaskModal()">
+                    <i class="fa-solid fa-plus"></i> Add New Task
+                </button>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Sidebar Column: LIFO Recently Completed Stack -->
+        <aside class="tasks-side-column">
+            <!-- C LIFO Stack Representation -->
+            <div class="side-card stack-card">
+                <div class="side-card-header">
+                    <h4>
+                        <i class="fa-solid fa-layer-group"></i> Recently Completed 
+                        <span class="badge-ads-mini">C Stack</span>
+                    </h4>
+                </div>
+                <div class="stack-visualizer">
+                    <div class="stack-top-pointer">
+                        <i class="fa-solid fa-arrow-down"></i> TOP OF STACK (LIFO)
+                    </div>
+                    {% if completed_stack %}
+                        <div class="stack-elements">
+                            {% for cs in completed_stack %}
+                            <div class="stack-item {% if loop.first %}stack-top-item{% endif %}">
+                                <div class="stack-item-meta">
+                                    <span class="stack-id">#{{ cs.task_id }}</span>
+                                    <span class="stack-time">{{ cs.completed_at_str }}</span>
+                                </div>
+                                <div class="stack-title">{{ cs.title }}</div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="stack-empty">
+                            <i class="fa-solid fa-inbox"></i>
+                            <p>No completed tasks in stack.</p>
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="side-card-footer">
+                    <a href="{{ url_for('algorithms_hub') }}#stack-tab" class="side-card-link">
+                        Test Stack Push/Pop Operations &rarr;
+                    </a>
+                </div>
+            </div>
+
+            <!-- Subject List Card -->
+            <div class="side-card subjects-card">
+                <div class="side-card-header">
+                    <h4><i class="fa-solid fa-book"></i> Enrolled Subjects</h4>
+                    <button class="btn-sm btn-ghost" onclick="openAddSubjectModal()">+ Add</button>
+                </div>
+                <ul class="subjects-list">
+                    {% for s in subjects %}
+                    <li class="subject-item">
+                        <div class="subj-badge">{{ s.subject_code }}</div>
+                        <div class="subj-details">
+                            <span class="subj-name">{{ s.subject_name }}</span>
+                            <span class="subj-sem">Semester {{ s.semester }}</span>
+                        </div>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </aside>
+    </div>
+
+</div>
+
+<!-- ================= MODALS ================= -->
+
+<!-- 1. Add Task Modal -->
+<div class="modal-overlay" id="addTaskModal">
+    <div class="modal-box">
+        <div class="modal-header">
+            <h3><i class="fa-solid fa-circle-plus"></i> Add New Academic Task</h3>
+            <button class="modal-close" onclick="closeAddTaskModal()">&times;</button>
+        </div>
+        <form method="POST" action="{{ url_for('add_task') }}">
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Task Title <span class="required">*</span></label>
+                    <input type="text" name="title" required placeholder="e.g. Implement Red-Black Tree in C" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label>Subject</label>
+                    <select name="subject_id" class="form-select">
+                        <option value="">-- Select Academic Subject --</option>
+                        {% for s in subjects %}
+                        <option value="{{ s.subject_id }}">{{ s.subject_code }} - {{ s.subject_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-row">
+                    <div class="form-group col-half">
+                        <label>Priority (ADS Max-Heap) <span class="required">*</span></label>
+                        <select name="priority" class="form-select" required>
+                            <option value="High">High Priority (Score 3)</option>
+                            <option value="Medium" selected>Medium Priority (Score 2)</option>
+                            <option value="Low">Low Priority (Score 1)</option>
+                        </select>
+                    </div>
+                    <div class="form-group col-half">
+                        <label>Deadline Date & Time <span class="required">*</span></label>
+                        <input type="datetime-local" name="deadline" required class="form-control">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Task Description / Deliverables</label>
+                    <textarea name="description" rows="3" placeholder="Specify algorithms, constraints, problem statements..." class="form-control"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeAddTaskModal()">Cancel</button>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fa-solid fa-floppy-disk"></i> Save Task
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- 2. Edit Task Modal -->
+<div class="modal-overlay" id="editTaskModal">
+    <div class="modal-box">
+        <div class="modal-header">
+            <h3><i class="fa-solid fa-pen-to-square"></i> Edit Task <span id="editTaskModalId"></span></h3>
+            <button class="modal-close" onclick="closeEditTaskModal()">&times;</button>
+        </div>
+        <form method="POST" id="editTaskForm" action="">
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Task Title <span class="required">*</span></label>
+                    <input type="text" name="title" id="edit_title" required class="form-control">
+                </div>
+                <div class="form-group">
+                    <label>Subject</label>
+                    <select name="subject_id" id="edit_subject_id" class="form-select">
+                        <option value="">-- Select Academic Subject --</option>
+                        {% for s in subjects %}
+                        <option value="{{ s.subject_id }}">{{ s.subject_code }} - {{ s.subject_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-row">
+                    <div class="form-group col-half">
+                        <label>Priority</label>
+                        <select name="priority" id="edit_priority" class="form-select" required>
+                            <option value="High">High Priority</option>
+                            <option value="Medium">Medium Priority</option>
+                            <option value="Low">Low Priority</option>
+                        </select>
+                    </div>
+                    <div class="form-group col-half">
+                        <label>Deadline</label>
+                        <input type="datetime-local" name="deadline" id="edit_deadline" required class="form-control">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Task Description</label>
+                    <textarea name="description" id="edit_description" rows="3" class="form-control"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeEditTaskModal()">Cancel</button>
+                <button type="submit" class="btn btn-primary">Update Task</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- 3. Add Subject Modal -->
+<div class="modal-overlay" id="addSubjectModal">
+    <div class="modal-box modal-box-sm">
+        <div class="modal-header">
+            <h3><i class="fa-solid fa-book-medical"></i> Add Subject</h3>
+            <button class="modal-close" onclick="closeAddSubjectModal()">&times;</button>
+        </div>
+        <form method="POST" action="{{ url_for('add_subject_route') }}">
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Subject Code <span class="required">*</span></label>
+                    <input type="text" name="subject_code" placeholder="e.g. CS501" required class="form-control">
+                </div>
+                <div class="form-group">
+                    <label>Subject Name <span class="required">*</span></label>
+                    <input type="text" name="subject_name" placeholder="e.g. Advanced Data Structures" required class="form-control">
+                </div>
+                <div class="form-group">
+                    <label>Semester</label>
+                    <input type="number" name="semester" value="{{ current_student.semester }}" min="1" max="8" class="form-control">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeAddSubjectModal()">Cancel</button>
+                <button type="submit" class="btn btn-primary">Add Subject</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- 4. C Binary Search Modal -->
+<div class="modal-overlay" id="binarySearchModal">
+    <div class="modal-box modal-box-lg">
+        <div class="modal-header">
+            <h3><i class="fa-solid fa-magnifying-glass"></i> C Binary Search [O(log n)] on Task IDs</h3>
+            <button class="modal-close" onclick="closeBinarySearchModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <p class="modal-note">
+                Executes <code>algorithms/binary_search.c</code>. Task IDs are sorted first as a precondition, and search space is halved at each iteration.
+            </p>
+            <div class="search-input-box">
+                <label>Enter Target Task ID to Search:</label>
+                <div class="input-with-button">
+                    <input type="number" id="bsTargetId" placeholder="e.g. 101, 102, 103..." class="form-control">
+                    <button class="btn btn-primary" onclick="executeBinarySearch()">
+                        <i class="fa-solid fa-play"></i> Execute Search
+                    </button>
+                </div>
+            </div>
+
+            <!-- Live Output Display -->
+            <div id="bsLoading" style="display:none;" class="text-center py-4">
+                <i class="fa-solid fa-spinner fa-spin fa-2x"></i>
+                <p>Executing C binary search executable...</p>
+            </div>
+
+            <div id="bsResults" style="display:none;" class="bs-results-container">
+                <div class="result-summary-bar" id="bsSummaryBar"></div>
+                <h5 class="mt-3"><i class="fa-solid fa-list-ol"></i> Step-by-Step Divide & Conquer Trace:</h5>
+                <div class="table-responsive">
+                    <table class="table-trace" id="bsStepsTable">
+                        <thead>
+                            <tr>
+                                <th>Step</th>
+                                <th>Low Index</th>
+                                <th>Mid Index</th>
+                                <th>High Index</th>
+                                <th>Mid Task ID</th>
+                                <th>Comparison Result</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                <div id="bsFoundDetails" class="mt-3"></div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" onclick="closeBinarySearchModal()">Close</button>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    // Prepare data for Chart.js
+    const taskStats = {
+        total: {{ stats.total }},
+        completed: {{ stats.completed }},
+        pending: {{ stats.pending }},
+        high: {{ stats.high_pending }},
+        medium: {{ stats.med_pending }},
+        low: {{ stats.low_pending }}
+    };
+
+    // Prepare task deadlines for calendar
+    const taskDeadlines = [
+        {% for t in tasks %}
+            {
+                id: {{ t.task_id }},
+                title: {{ t.title|tojson }},
+                date: {{ (t.deadline_date if t.deadline_date else "")|tojson }},
+                priority: {{ t.priority|tojson }},
+                status: {{ t.status|tojson }}
+            },
+        {% endfor %}
+    ];
+
+    document.addEventListener("DOMContentLoaded", function() {
+        initDashboardCharts(taskStats);
+        renderMiniCalendar(taskDeadlines);
+    });
+</script>
+{% endblock %}
+

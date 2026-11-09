@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Student Task & Deadline Management System{% endblock %} | ADS PBL</title>
+    <!-- Google Fonts: Inter & JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Custom Theme Stylesheet -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="theme-blue-purple">
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        {% if current_student %}
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="logo-mark">
+                    <i class="fa-solid fa-diagram-project"></i>
+                </div>
+                <div class="logo-text">
+                    <h2>ADS Manager</h2>
+                    <span class="badge-ads">Data Structures PBL</span>
+                </div>
+            </div>
+
+            <!-- Student Profile Badge -->
+            <div class="student-mini-profile">
+                <div class="avatar-circle">
+                    {{ current_student.full_name[:2].upper() }}
+                </div>
+                <div class="profile-info">
+                    <h4>{{ current_student.full_name }}</h4>
+                    <p><i class="fa-solid fa-id-card"></i> {{ current_student.roll_number }}</p>
+                    <span class="dept-tag">Sem {{ current_student.semester }} &bull; CSE</span>
+                </div>
+            </div>
+
+            <!-- Navigation Links -->
+            <nav class="sidebar-nav">
+                <div class="nav-section-title">ACADEMIC WORKFLOW</div>
+                <a href="{{ url_for('dashboard') }}" class="nav-item {% if request.endpoint == 'dashboard' and not request.args.get('status') %}active{% endif %}">
+                    <i class="fa-solid fa-gauge-high"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="{{ url_for('dashboard', status='Pending') }}" class="nav-item {% if request.args.get('status') == 'Pending' %}active{% endif %}">
+                    <i class="fa-solid fa-clock-rotate-left"></i>
+                    <span>Pending Tasks</span>
+                    {% if global_stats and global_stats.pending > 0 %}
+                    <span class="nav-badge pending">{{ global_stats.pending }}</span>
+                    {% endif %}
+                </a>
+                <a href="{{ url_for('dashboard', status='Completed') }}" class="nav-item {% if request.args.get('status') == 'Completed' %}active{% endif %}">
+                    <i class="fa-solid fa-circle-check"></i>
+                    <span>Completed Tasks</span>
+                    {% if global_stats and global_stats.completed > 0 %}
+                    <span class="nav-badge completed">{{ global_stats.completed }}</span>
+                    {% endif %}
+                </a>
+
+                <div class="nav-section-title">ADVANCED DATA STRUCTURES</div>
+                <a href="{{ url_for('algorithms_hub') }}" class="nav-item ads-highlight {% if request.endpoint == 'algorithms_hub' %}active{% endif %}">
+                    <i class="fa-solid fa-microchip"></i>
+                    <span>ADS Algorithms Hub</span>
+                    <span class="nav-badge algo">6 in C</span>
+                </a>
+
+                <div class="nav-section-title">C ALGORITHM SHORTCUTS</div>
+                <a href="{{ url_for('dashboard', sort='deadline_merge_sort') }}" class="nav-sub-item">
+                    <i class="fa-solid fa-arrow-down-short-wide"></i> C Merge Sort Deadlines
+                </a>
+                <a href="{{ url_for('dashboard', sort='priority_heap') }}" class="nav-sub-item">
+                    <i class="fa-solid fa-layer-group"></i> C Priority Max-Heap
+                </a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <a href="{{ url_for('logout') }}" class="logout-btn">
+                    <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                    <span>Sign Out</span>
+                </a>
+            </div>
+        </aside>
+        {% endif %}
+
+        <!-- Main Content Area -->
+        <main class="main-wrapper {% if not current_student %}auth-wrapper{% endif %}">
+            <!-- Top Navbar Header -->
+            {% if current_student %}
+            <header class="top-navbar">
+                <div class="nav-left">
+                    <button class="menu-toggle-btn" id="sidebarToggle" aria-label="Toggle Menu">
+                        <i class="fa-solid fa-bars"></i>
+                    </button>
+                    <div class="page-title-group">
+                        <h1 class="page-title">{% block page_heading %}Dashboard{% endblock %}</h1>
+                        <p class="page-subtitle">Department of Computer Science & Engineering &bull; Advanced Data Structures PBL</p>
+                    </div>
+                </div>
+
+                <div class="nav-right">
+                    <!-- Deadline Notification Bell -->
+                    <div class="notification-dropdown-wrapper">
+                        <button class="icon-action-btn" id="notifBell" title="Upcoming Deadlines">
+                            <i class="fa-solid fa-bell"></i>
+                            {% if global_stats and (global_stats.urgent_48h > 0 or global_stats.overdue > 0) %}
+                            <span class="notif-dot animate-pulse"></span>
+                            {% endif %}
+                        </button>
+                        <div class="notif-flyout" id="notifFlyout">
+                            <div class="notif-header">
+                                <h4><i class="fa-solid fa-bell"></i> Deadline Alerts</h4>
+                                <span class="badge-alert">{{ global_stats.upcoming_tasks|length if global_stats else 0 }} due soon</span>
+                            </div>
+                            <div class="notif-body">
+                                {% if global_stats and global_stats.upcoming_tasks %}
+                                    {% for ut in global_stats.upcoming_tasks %}
+                                    <div class="notif-item">
+                                        <div class="notif-prio-pill prio-{{ ut.priority.lower() }}">{{ ut.priority }}</div>
+                                        <div class="notif-info">
+                                            <div class="notif-title">{{ ut.title }}</div>
+                                            <div class="notif-time">Due: {{ ut.deadline_str }} ({{ ut.days_left }}d left)</div>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                {% else %}
+                                    <div class="notif-empty">
+                                        <i class="fa-regular fa-calendar-check"></i>
+                                        <p>No urgent deadlines in next 48 hours.</p>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Add Task Button -->
+                    <button class="btn btn-primary" onclick="openAddTaskModal()">
+                        <i class="fa-solid fa-plus"></i>
+                        <span>New Task</span>
+                    </button>
+                </div>
+            </header>
+            {% endif %}
+
+            <!-- Flash Alert Messages -->
+            <div class="content-container">
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        <div class="flash-messages-group">
+                            {% for category, message in messages %}
+                            <div class="alert alert-{{ category }} animate-fade-in">
+                                <div class="alert-icon">
+                                    {% if category == 'success' %}
+                                        <i class="fa-solid fa-circle-check"></i>
+                                    {% elif category == 'danger' %}
+                                        <i class="fa-solid fa-circle-exclamation"></i>
+                                    {% elif category == 'warning' %}
+                                        <i class="fa-solid fa-triangle-exclamation"></i>
+                                    {% else %}
+                                        <i class="fa-solid fa-circle-info"></i>
+                                    {% endif %}
+                                </div>
+                                <div class="alert-text">{{ message }}</div>
+                                <button class="alert-close" onclick="this.parentElement.remove()">&times;</button>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                {% endwith %}
+
+                <!-- Main Injected Template Content -->
+                {% block content %}{% endblock %}
+            </div>
+
+            <!-- Footer -->
+            {% if current_student %}
+            <footer class="app-footer">
+                <div class="footer-left">
+                    <p><strong>Student Task & Deadline Management System</strong> &bull; Advanced Data Structures (ADS) College PBL</p>
+                </div>
+                <div class="footer-right">
+                    <span><i class="fa-solid fa-code"></i> 6 Native C Algorithms Active</span>
+                    <span class="db-pill"><i class="fa-solid fa-database"></i> MySQL: student_task_db</span>
+                </div>
+            </footer>
+            {% endif %}
+        </main>
+    </div>
+
+    <!-- Global Scripts -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html>
+

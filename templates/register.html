@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block title %}Student Registration{% endblock %}
+
+{% block content %}
+<div class="auth-card-container">
+    <div class="auth-card auth-card-wide">
+        <div class="auth-header">
+            <div class="auth-logo">
+                <i class="fa-solid fa-user-plus"></i>
+            </div>
+            <h2>Create Student Account</h2>
+            <p>Enroll in the Task & Deadline Management System</p>
+        </div>
+
+        <form method="POST" action="{{ url_for('register') }}" class="auth-form">
+            <div class="form-row">
+                <div class="form-group col-half">
+                    <label><i class="fa-regular fa-user"></i> Full Name <span class="required">*</span></label>
+                    <input type="text" name="full_name" required placeholder="e.g. Maya Lin" class="form-control">
+                </div>
+                <div class="form-group col-half">
+                    <label><i class="fa-regular fa-envelope"></i> College Email <span class="required">*</span></label>
+                    <input type="email" name="email" required placeholder="e.g. maya@college.edu" class="form-control">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group col-half">
+                    <label><i class="fa-solid fa-id-card"></i> Roll / Student ID <span class="required">*</span></label>
+                    <input type="text" name="roll_number" required placeholder="e.g. 23CS205" class="form-control">
+                </div>
+                <div class="form-group col-half">
+                    <label><i class="fa-solid fa-graduation-cap"></i> Semester <span class="required">*</span></label>
+                    <select name="semester" class="form-select">
+                        <option value="1">Semester 1</option>
+                        <option value="2">Semester 2</option>
+                        <option value="3">Semester 3</option>
+                        <option value="4">Semester 4</option>
+                        <option value="5" selected>Semester 5 (ADS PBL)</option>
+                        <option value="6">Semester 6</option>
+                        <option value="7">Semester 7</option>
+                        <option value="8">Semester 8</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label><i class="fa-solid fa-building-columns"></i> Academic Department</label>
+                <input type="text" name="department" value="Computer Science & Engineering" class="form-control">
+            </div>
+
+            <div class="form-row">
+                <div class="form-group col-half">
+                    <label><i class="fa-solid fa-lock"></i> Password <span class="required">*</span></label>
+                    <input type="password" name="password" required minlength="6" placeholder="Min. 6 characters" class="form-control">
+                </div>
+                <div class="form-group col-half">
+                    <label><i class="fa-solid fa-lock-open"></i> Confirm Password <span class="required">*</span></label>
+                    <input type="password" name="confirm_password" required minlength="6" placeholder="Re-enter password" class="form-control">
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block btn-lg mt-3">
+                <i class="fa-solid fa-id-badge"></i> Complete Registration
+            </button>
+        </form>
+
+        <div class="auth-footer">
+            <p>Already registered? <a href="{{ url_for('login') }}">Sign In to Dashboard</a></p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

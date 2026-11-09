@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block title %}404 - Page Not Found{% endblock %}
+
+{% block content %}
+<div class="error-container">
+    <div class="error-card">
+        <div class="error-code">404</div>
+        <h2>Page Not Found</h2>
+        <p>The academic resource or task view you requested could not be found.</p>
+        <a href="{{ url_for('dashboard') }}" class="btn btn-primary mt-3">
+            <i class="fa-solid fa-house"></i> Return to Dashboard
+        </a>
+    </div>
+</div>
+{% endblock %}
+

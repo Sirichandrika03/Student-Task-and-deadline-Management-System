@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block title %}Student Sign In{% endblock %}
+
+{% block content %}
+<div class="auth-card-container">
+    <div class="auth-card">
+        <div class="auth-header">
+            <div class="auth-logo">
+                <i class="fa-solid fa-graduation-cap"></i>
+            </div>
+            <h2>Student Portal Login</h2>
+            <p>Student Task & Deadline Management System &bull; ADS PBL</p>
+        </div>
+
+        <form method="POST" action="{{ url_for('login') }}" class="auth-form">
+            <div class="form-group">
+                <label for="email"><i class="fa-regular fa-envelope"></i> College Email Address</label>
+                <input type="email" id="email" name="email" value="{{ email if email else 'student@college.edu' }}" required class="form-control" placeholder="name@college.edu">
+            </div>
+
+            <div class="form-group">
+                <label for="password"><i class="fa-solid fa-lock"></i> Account Password</label>
+                <input type="password" id="password" name="password" value="student123" required class="form-control" placeholder="Enter password">
+            </div>
+
+            <div class="demo-credentials-pill" onclick="fillDemoCredentials()">
+                <i class="fa-solid fa-key"></i>
+                <span>Click to Auto-fill Demo Account: <code>student@college.edu</code> / <code>student123</code></span>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block btn-lg mt-3">
+                <i class="fa-solid fa-arrow-right-to-bracket"></i> Sign In to Dashboard
+            </button>
+        </form>
+
+        <div class="auth-footer">
+            <p>Don't have an account yet? <a href="{{ url_for('register') }}">Register as a Student</a></p>
+            <div class="auth-ads-pill">
+                <i class="fa-solid fa-microchip"></i> Powered by 6 C Algorithms & MySQL 8.0
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    function fillDemoCredentials() {
+        document.getElementById('email').value = 'student@college.edu';
+        document.getElementById('password').value = 'student123';
+    }
+</script>
+{% endblock %}
+

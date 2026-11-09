@@ -1,0 +1,971 @@
+{% extends "base.html" %}
+
+{% block title %}ADS Algorithms Hub & Interactive Playground{% endblock %}
+{% block page_heading %}Advanced Data Structures (ADS) Algorithms Hub{% endblock %}
+
+{% block content %}
+<div class="algo-hub-container">
+
+    <!-- Top Hero Banner explaining the ADS PBL Core -->
+    <section class="algo-hero-banner">
+        <div class="hero-left">
+            <span class="pill-c-badge"><i class="fa-solid fa-code"></i> Pure C Implementations &bull; Compiled & Integrated</span>
+            <h2>Core Advanced Data Structures Lab</h2>
+            <p>
+                This module demonstrates the six mandatory Advanced Data Structures algorithms implemented in native C, compiled to machine code, and connected via the Python Flask backend to the Student Task Management workflow.
+            </p>
+        </div>
+        <div class="hero-right">
+            <div class="algo-badges-grid">
+                <div class="algo-mini-pill"><i class="fa-solid fa-link"></i> Linked List</div>
+                <div class="algo-mini-pill"><i class="fa-solid fa-arrows-left-right"></i> FIFO Queue</div>
+                <div class="algo-mini-pill"><i class="fa-solid fa-layer-group"></i> LIFO Stack</div>
+                <div class="algo-mini-pill"><i class="fa-solid fa-sitemap"></i> Max-Heap PQ</div>
+                <div class="algo-mini-pill"><i class="fa-solid fa-shuffle"></i> Merge Sort</div>
+                <div class="algo-mini-pill"><i class="fa-solid fa-magnifying-glass"></i> Binary Search</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Algorithms Navigation Tabs -->
+    <div class="algo-tabs-nav">
+        <button class="algo-tab-btn active" onclick="switchAlgoTab('linked-list-tab', this)">
+            <i class="fa-solid fa-link"></i> 1. Linked List
+        </button>
+        <button class="algo-tab-btn" onclick="switchAlgoTab('queue-tab', this)">
+            <i class="fa-solid fa-arrows-left-right"></i> 2. FIFO Queue
+        </button>
+        <button class="algo-tab-btn" onclick="switchAlgoTab('stack-tab', this)">
+            <i class="fa-solid fa-layer-group"></i> 3. LIFO Stack
+        </button>
+        <button class="algo-tab-btn" onclick="switchAlgoTab('pq-tab', this)">
+            <i class="fa-solid fa-sitemap"></i> 4. Priority Queue (Max-Heap)
+        </button>
+        <button class="algo-tab-btn" onclick="switchAlgoTab('merge-sort-tab', this)">
+            <i class="fa-solid fa-shuffle"></i> 5. Merge Sort
+        </button>
+        <button class="algo-tab-btn" onclick="switchAlgoTab('binary-search-tab', this)">
+            <i class="fa-solid fa-magnifying-glass"></i> 6. Binary Search
+        </button>
+        <button class="algo-tab-btn code-tab-btn" onclick="switchAlgoTab('source-code-tab', this)">
+            <i class="fa-solid fa-file-code"></i> View C Source Code
+        </button>
+    </div>
+
+    <!-- ================= TAB 1: LINKED LIST ================= -->
+    <div class="algo-tab-content active" id="linked-list-tab">
+        <div class="algo-section-header">
+            <div class="algo-title-block">
+                <span class="algo-number">Algorithm 01</span>
+                <h3>Dynamic Singly Linked List for Task Management</h3>
+                <p>Dynamically allocates heap memory (via <code>malloc</code>) for student tasks, linked via node pointers (<code>TaskNode* next</code>).</p>
+            </div>
+            <div class="algo-complexity-box">
+                <span class="complexity-title">Time Complexity</span>
+                <div class="complexity-row"><span>Insert Head/Tail:</span> <strong>O(1)</strong></div>
+                <div class="complexity-row"><span>Delete Node:</span> <strong>O(n)</strong></div>
+                <div class="complexity-row"><span>Traverse / Display:</span> <strong>O(n)</strong></div>
+                <div class="complexity-row"><span>Space:</span> <strong>O(n) dynamic</strong></div>
+            </div>
+        </div>
+
+        <div class="algo-workspace-grid">
+            <!-- Left: Interactive Sandbox Controls -->
+            <div class="algo-card">
+                <h4><i class="fa-solid fa-sliders"></i> Interactive C Workbench</h4>
+                <div class="workbench-form">
+                    <div class="form-group">
+                        <label>Task ID to Insert:</label>
+                        <input type="number" id="ll_id" value="109" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label>Task Title:</label>
+                        <input type="text" id="ll_title" value="B-Tree Indexing Engine" class="form-control">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group col-half">
+                            <label>Priority:</label>
+                            <select id="ll_priority" class="form-select">
+                                <option value="High">High</option>
+                                <option value="Medium" selected>Medium</option>
+                                <option value="Low">Low</option>
+                            </select>
+                        </div>
+                        <div class="form-group col-half">
+                            <label>Deadline:</label>
+                            <input type="date" id="ll_deadline" value="2026-11-25" class="form-control">
+                        </div>
+                    </div>
+                    <div class="btn-group-row">
+                        <button class="btn btn-primary" onclick="testLinkedListInsert()">
+                            <i class="fa-solid fa-plus"></i> Insert Node in C
+                        </button>
+                    </div>
+
+                    <hr class="divider">
+
+                    <div class="form-group">
+                        <label>Delete Node by Task ID:</label>
+                        <div class="input-with-button">
+                            <input type="number" id="ll_del_id" placeholder="Enter Task ID" class="form-control">
+                            <button class="btn btn-danger" onclick="testLinkedListDelete()">
+                                <i class="fa-solid fa-trash"></i> Delete Node
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: Visual Linked List Representation & Output -->
+            <div class="algo-card">
+                <div class="card-header">
+                    <h4><i class="fa-solid fa-diagram-project"></i> Dynamic Linked List Nodes Chain</h4>
+                    <span class="badge-source">Compiled binary: algorithms/bin/linked_list.exe</span>
+                </div>
+                
+                <div class="ll-visual-canvas" id="llVisualCanvas">
+                    <!-- Populated dynamically via C output -->
+                    <div class="ll-head-pointer"><i class="fa-solid fa-arrow-right"></i> HEAD POINTER</div>
+                    <div class="ll-chain-container" id="llChainContainer">
+                        {% for t in tasks %}
+                        <div class="ll-node">
+                            <div class="node-data">
+                                <span class="node-id">ID: #{{ t.task_id }}</span>
+                                <span class="node-title">{{ t.title }}</span>
+                                <span class="node-prio prio-{{ t.priority.lower() }}">{{ t.priority }}</span>
+                            </div>
+                            <div class="node-pointer">
+                                <span>next</span>
+                                <i class="fa-solid fa-arrow-right-long"></i>
+                            </div>
+                        </div>
+                        {% endfor %}
+                        <div class="ll-null-node">NULL</div>
+                    </div>
+                </div>
+
+                <div class="terminal-output mt-3">
+                    <div class="terminal-bar"><i class="fa-solid fa-terminal"></i> C Executable Standard Output (JSON Stream)</div>
+                    <pre class="terminal-body" id="llTerminalOutput">{{ ll_result | tojson(indent=2) }}</pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= TAB 2: FIFO QUEUE ================= -->
+    <div class="algo-tab-content" id="queue-tab">
+        <div class="algo-section-header">
+            <div class="algo-title-block">
+                <span class="algo-number">Algorithm 02</span>
+                <h3>Circular FIFO Queue for Task Execution</h3>
+                <p>Enqueues new tasks at the <code>rear</code> and dequeues them from the <code>front</code> following strict First-In, First-Out discipline.</p>
+            </div>
+            <div class="algo-complexity-box">
+                <span class="complexity-title">Time Complexity</span>
+                <div class="complexity-row"><span>Enqueue:</span> <strong>O(1)</strong></div>
+                <div class="complexity-row"><span>Dequeue:</span> <strong>O(1)</strong></div>
+                <div class="complexity-row"><span>Peek Front:</span> <strong>O(1)</strong></div>
+                <div class="complexity-row"><span>Space:</span> <strong>O(MAX_CAPACITY)</strong></div>
+            </div>
+        </div>
+
+        <div class="algo-workspace-grid">
+            <div class="algo-card">
+                <h4><i class="fa-solid fa-sliders"></i> FIFO Operations Workbench</h4>
+                <div class="workbench-form">
+                    <div class="form-group">
+                        <label>Task ID to Enqueue:</label>
+                        <input type="number" id="q_id" value="110" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label>Task Title:</label>
+                        <input type="text" id="q_title" value="Distributed Consensus Raft Lab" class="form-control">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group col-half">
+                            <label>Priority:</label>
+                            <select id="q_priority" class="form-select">
+                                <option value="High">High</option>
+                                <option value="Medium" selected>Medium</option>
+                                <option value="Low">Low</option>
+                            </select>
+                        </div>
+                        <div class="form-group col-half">
+                            <label>Deadline:</label>
+                            <input type="date" id="q_deadline" value="2026-11-28" class="form-control">
+                        </div>
+                    </div>
+                    <div class="btn-group-row">
+                        <button class="btn btn-primary" onclick="testQueueEnqueue()">
+                            <i class="fa-solid fa-arrow-right-to-bracket"></i> Enqueue (Push to Rear)
+                        </button>
+                        <button class="btn btn-warning" onclick="testQueueDequeue()">
+                            <i class="fa-solid fa-arrow-right-from-bracket"></i> Dequeue (Process Front)
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="algo-card">
+                <div class="card-header">
+                    <h4><i class="fa-solid fa-arrows-left-right"></i> Queue Circular Array Slots</h4>
+                    <span class="badge-source">Compiled binary: algorithms/bin/queue.exe</span>
+                </div>
+                
+                <div class="queue-visualizer-canvas" id="queueVisualCanvas">
+                    <div class="queue-indicators">
+                        <span class="indicator-front"><i class="fa-solid fa-caret-down"></i> FRONT (Leaves here)</span>
+                        <span class="indicator-rear"><i class="fa-solid fa-caret-down"></i> REAR (Enters here)</span>
+                    </div>
+                    <div class="queue-slots-row" id="queueSlotsRow">
+                        {% if q_result and q_result.tasks %}
+                            {% for qt in q_result.tasks %}
+                            <div class="queue-slot occupied">
+                                <span class="slot-idx">Pos {{ qt.position }}</span>
+                                <span class="slot-id">#{{ qt.task_id }}</span>
+                                <span class="slot-title">{{ qt.title }}</span>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="empty-notice">Queue currently empty</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="terminal-output mt-3">
+                    <div class="terminal-bar"><i class="fa-solid fa-terminal"></i> C Queue Output</div>
+                    <pre class="terminal-body" id="queueTerminalOutput">{{ q_result | tojson(indent=2) }}</pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= TAB 3: LIFO STACK ================= -->
+    <div class="algo-tab-content" id="stack-tab">
+        <div class="algo-section-header">
+            <div class="algo-title-block">
+                <span class="algo-number">Algorithm 03</span>
+                <h3>LIFO Stack for Recently Completed Tasks & Undo</h3>
+                <p>Implements a Last-In, First-Out stack using an array with <code>top</code> index pointer to track task completions and support undo operations.</p>
+            </div>
+            <div class="algo-complexity-box">
+                <span class="complexity-title">Time Complexity</span>
+                <div class="complexity-row"><span>Push (Complete Task):</span> <strong>O(1)</strong></div>
+                <div class="complexity-row"><span>Pop (Undo Task):</span> <strong>O(1)</strong></div>
+                <div class="complexity-row"><span>Peek Top:</span> <strong>O(1)</strong></div>
+                <div class="complexity-row"><span>Space:</span> <strong>O(MAX_STACK)</strong></div>
+            </div>
+        </div>
+
+        <div class="algo-workspace-grid">
+            <div class="algo-card">
+                <h4><i class="fa-solid fa-sliders"></i> Stack Operations Workbench</h4>
+                <div class="workbench-form">
+                    <div class="form-group">
+                        <label>Task ID to Complete (Push):</label>
+                        <input type="number" id="stk_id" value="111" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label>Task Title:</label>
+                        <input type="text" id="stk_title" value="Kruskal & Prim MST Algorithm Lab" class="form-control">
+                    </div>
+                    <div class="btn-group-row">
+                        <button class="btn btn-primary" onclick="testStackPush()">
+                            <i class="fa-solid fa-arrow-up-from-bracket"></i> Push Completed Task [O(1)]
+                        </button>
+                        <button class="btn btn-danger" onclick="testStackPop()">
+                            <i class="fa-solid fa-rotate-left"></i> Pop / Undo [O(1)]
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="algo-card">
+                <div class="card-header">
+                    <h4><i class="fa-solid fa-layer-group"></i> LIFO Stack Tower Visualization</h4>
+                    <span class="badge-source">Compiled binary: algorithms/bin/stack.exe</span>
+                </div>
+                
+                <div class="stack-tower-container" id="stackTowerContainer">
+                    <div class="stack-pointer-banner">
+                        <i class="fa-solid fa-arrow-down"></i> TOP OF STACK POINTER
+                    </div>
+                    <div class="stack-tower" id="stackTower">
+                        {% if stack_result and stack_result.stack_history %}
+                            {% for sh in stack_result.stack_history %}
+                            <div class="stack-plate {% if loop.first %}top-plate{% endif %}">
+                                <div class="plate-level">Level {{ sh.stack_level }}</div>
+                                <div class="plate-title">#{{ sh.task_id }}: {{ sh.title }}</div>
+                                <div class="plate-time">{{ sh.completed_at }}</div>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="empty-notice">Stack is currently empty</div>
+                        {% endif %}
+                    </div>
+                    <div class="stack-base">STACK BASE</div>
+                </div>
+
+                <div class="terminal-output mt-3">
+                    <div class="terminal-bar"><i class="fa-solid fa-terminal"></i> C Stack Output</div>
+                    <pre class="terminal-body" id="stackTerminalOutput">{{ stack_result | tojson(indent=2) }}</pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= TAB 4: PRIORITY QUEUE ================= -->
+    <div class="algo-tab-content" id="pq-tab">
+        <div class="algo-section-header">
+            <div class="algo-title-block">
+                <span class="algo-number">Algorithm 04</span>
+                <h3>Binary Max-Heap Priority Queue for Task Scheduling</h3>
+                <p>Prioritizes high-urgency tasks using a complete binary tree where parent priority &ge; children. Score mapping: High=3, Medium=2, Low=1. <strong>Tie-Breaker:</strong> If two tasks share equal priority, the task with the nearest deadline appears first.</p>
+            </div>
+            <div class="algo-complexity-box">
+                <span class="complexity-title">Time Complexity</span>
+                <div class="complexity-row"><span>Insert (Sift-Up):</span> <strong>O(log n)</strong></div>
+                <div class="complexity-row"><span>Extract Max (Sift-Down):</span> <strong>O(log n)</strong></div>
+                <div class="complexity-row"><span>Peek Max:</span> <strong>O(1)</strong></div>
+                <div class="complexity-row"><span>HeapSort Schedule:</span> <strong>O(n log n)</strong></div>
+            </div>
+        </div>
+
+        <div class="algo-workspace-grid">
+            <div class="algo-card">
+                <h4><i class="fa-solid fa-sliders"></i> Max-Heap Workbench</h4>
+                <div class="workbench-form">
+                    <div class="form-group">
+                        <label>Task ID:</label>
+                        <input type="number" id="pq_id" value="112" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label>Task Title:</label>
+                        <input type="text" id="pq_title" value="Compiler Lexical Analyzer in C" class="form-control">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group col-half">
+                            <label>Priority (Heap Key):</label>
+                            <select id="pq_prio_select" class="form-select">
+                                <option value="High" selected>High (Score: 3)</option>
+                                <option value="Medium">Medium (Score: 2)</option>
+                                <option value="Low">Low (Score: 1)</option>
+                            </select>
+                        </div>
+                        <div class="form-group col-half">
+                            <label>Deadline (Tie-Breaker):</label>
+                            <input type="date" id="pq_deadline" value="2026-11-08" class="form-control">
+                        </div>
+                    </div>
+                    <div class="btn-group-row">
+                        <button class="btn btn-primary" onclick="testPQInsert()">
+                            <i class="fa-solid fa-plus"></i> Insert into Max-Heap
+                        </button>
+                        <button class="btn btn-warning" onclick="testPQExtractMax()">
+                            <i class="fa-solid fa-crown"></i> Extract Max Priority
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="algo-card">
+                <div class="card-header">
+                    <h4><i class="fa-solid fa-sitemap"></i> Priority Order Schedule (High &rarr; Med &rarr; Low)</h4>
+                    <span class="badge-source">Compiled binary: algorithms/bin/priority_queue.exe</span>
+                </div>
+                
+                <div class="pq-schedule-table-wrapper" id="pqScheduleWrapper">
+                    <table class="table-trace">
+                        <thead>
+                            <tr>
+                                <th>Heap Rank</th>
+                                <th>Task ID</th>
+                                <th>Title</th>
+                                <th>Priority</th>
+                                <th>Heap Score</th>
+                                <th>Deadline</th>
+                            </tr>
+                        </thead>
+                        <tbody id="pqScheduleBody">
+                            {% if pq_result and pq_result.priority_ordered_tasks %}
+                                {% for pt in pq_result.priority_ordered_tasks %}
+                                <tr>
+                                    <td><strong>#{{ pt.rank }}</strong></td>
+                                    <td>#{{ pt.task_id }}</td>
+                                    <td>{{ pt.title }}</td>
+                                    <td><span class="badge-priority priority-{{ pt.priority.lower() }}">{{ pt.priority }}</span></td>
+                                    <td><code>{{ pt.score }}</code></td>
+                                    <td>{{ pt.deadline }}</td>
+                                </tr>
+                                {% endfor %}
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="terminal-output mt-3">
+                    <div class="terminal-bar"><i class="fa-solid fa-terminal"></i> C Max-Heap Array & Execution JSON</div>
+                    <pre class="terminal-body" id="pqTerminalOutput">{{ pq_result | tojson(indent=2) }}</pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= TAB 5: MERGE SORT ================= -->
+    <div class="algo-tab-content" id="merge-sort-tab">
+        <div class="algo-section-header">
+            <div class="algo-title-block">
+                <span class="algo-number">Algorithm 05</span>
+                <h3>Divide & Conquer Merge Sort for Deadlines</h3>
+                <p>Recursively divides task arrays into halves until atomic subarrays of size 1, then merges them in linear time based on chronological deadline comparisons.</p>
+            </div>
+            <div class="algo-complexity-box">
+                <span class="complexity-title">Time Complexity</span>
+                <div class="complexity-row"><span>Best Case:</span> <strong>O(n log n)</strong></div>
+                <div class="complexity-row"><span>Average Case:</span> <strong>O(n log n)</strong></div>
+                <div class="complexity-row"><span>Worst Case:</span> <strong>O(n log n)</strong></div>
+                <div class="complexity-row"><span>Auxiliary Space:</span> <strong>O(n)</strong></div>
+            </div>
+        </div>
+
+        <div class="algo-workspace-grid">
+            <div class="algo-card">
+                <h4><i class="fa-solid fa-play"></i> Run C Merge Sort Benchmark</h4>
+                <p class="text-muted">Executes <code>mergeSort(tasks, 0, n - 1)</code> in C on all tasks currently stored in MySQL.</p>
+                <div class="benchmark-stats">
+                    <div class="stat-box">
+                        <span class="sb-label">Total Tasks:</span>
+                        <strong class="sb-val" id="ms_count">{{ ms_result.task_count if ms_result else 0 }}</strong>
+                    </div>
+                    <div class="stat-box">
+                        <span class="sb-label">Total Merges:</span>
+                        <strong class="sb-val" id="ms_merges">{{ ms_result.total_merges if ms_result else 0 }}</strong>
+                    </div>
+                    <div class="stat-box">
+                        <span class="sb-label">Recurrence:</span>
+                        <strong class="sb-val">T(n) = 2T(n/2) + O(n)</strong>
+                    </div>
+                </div>
+                <button class="btn btn-primary btn-block mt-3" onclick="testMergeSort()">
+                    <i class="fa-solid fa-rotate"></i> Re-Execute C Merge Sort Binary
+                </button>
+            </div>
+
+            <div class="algo-card">
+                <div class="card-header">
+                    <h4><i class="fa-solid fa-arrow-down-short-wide"></i> Sorted Task Schedule (Earliest Deadline First)</h4>
+                    <span class="badge-source">Compiled binary: algorithms/bin/merge_sort.exe</span>
+                </div>
+                
+                <div class="ms-results-wrapper">
+                    <table class="table-trace">
+                        <thead>
+                            <tr>
+                                <th>Sorted Rank</th>
+                                <th>Deadline (Chronological)</th>
+                                <th>Task ID</th>
+                                <th>Title</th>
+                                <th>Priority</th>
+                            </tr>
+                        </thead>
+                        <tbody id="msSortedBody">
+                            {% if ms_result and ms_result.sorted_tasks %}
+                                {% for mt in ms_result.sorted_tasks %}
+                                <tr>
+                                    <td><strong>#{{ mt.rank }}</strong></td>
+                                    <td><i class="fa-regular fa-clock"></i> {{ mt.deadline }}</td>
+                                    <td>#{{ mt.task_id }}</td>
+                                    <td>{{ mt.title }}</td>
+                                    <td><span class="badge-priority priority-{{ mt.priority.lower() }}">{{ mt.priority }}</span></td>
+                                </tr>
+                                {% endfor %}
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="terminal-output mt-3">
+                    <div class="terminal-bar"><i class="fa-solid fa-terminal"></i> C Merge Sort Output & Merging Steps</div>
+                    <pre class="terminal-body" id="msTerminalOutput">{{ ms_result | tojson(indent=2) }}</pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= TAB 6: BINARY SEARCH ================= -->
+    <div class="algo-tab-content" id="binary-search-tab">
+        <div class="algo-section-header">
+            <div class="algo-title-block">
+                <span class="algo-number">Algorithm 06</span>
+                <h3>Binary Search on Sorted Unique Task IDs</h3>
+                <p>Pre-sorts task IDs in ascending order, then repeatedly halves the candidate space by evaluating the midpoint element against target ID.</p>
+            </div>
+            <div class="algo-complexity-box">
+                <span class="complexity-title">Time Complexity</span>
+                <div class="complexity-row"><span>Best Case:</span> <strong>O(1) [Midpoint hit]</strong></div>
+                <div class="complexity-row"><span>Average Case:</span> <strong>O(log n)</strong></div>
+                <div class="complexity-row"><span>Worst Case:</span> <strong>O(log n)</strong></div>
+                <div class="complexity-row"><span>Space:</span> <strong>O(1) iterative</strong></div>
+            </div>
+        </div>
+
+        <div class="algo-workspace-grid">
+            <div class="algo-card">
+                <h4><i class="fa-solid fa-magnifying-glass"></i> Search Task by ID in C</h4>
+                <div class="workbench-form">
+                    <div class="form-group">
+                        <label>Target Task ID:</label>
+                        <input type="number" id="bs_tab_target" value="{{ tasks[0].task_id if tasks else 101 }}" class="form-control">
+                    </div>
+                    <button class="btn btn-primary" onclick="testBinarySearchTab()">
+                        <i class="fa-solid fa-play"></i> Run Binary Search in C
+                    </button>
+                    <div class="hint-box mt-3">
+                        <i class="fa-solid fa-circle-info"></i> Available IDs: 
+                        {% for t in tasks %}<code>#{{ t.task_id }}</code>{% if not loop.last %}, {% endif %}{% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="algo-card">
+                <div class="card-header">
+                    <h4><i class="fa-solid fa-list-ol"></i> Step-by-Step Divide & Conquer Iterations</h4>
+                    <span class="badge-source">Compiled binary: algorithms/bin/binary_search.exe</span>
+                </div>
+                
+                <div id="bsTabStepContainer">
+                    <table class="table-trace">
+                        <thead>
+                            <tr>
+                                <th>Step</th>
+                                <th>Low Index</th>
+                                <th>Mid Index</th>
+                                <th>High Index</th>
+                                <th>Midpoint ID</th>
+                                <th>Decision & Branch</th>
+                            </tr>
+                        </thead>
+                        <tbody id="bsTabStepsBody">
+                            {% if bs_result and bs_result.search_steps %}
+                                {% for st in bs_result.search_steps %}
+                                <tr>
+                                    <td><strong>Step {{ st.step }}</strong></td>
+                                    <td>{{ st.low }}</td>
+                                    <td><code>{{ st.mid }}</code></td>
+                                    <td>{{ st.high }}</td>
+                                    <td><strong>#{{ st.mid_id }}</strong></td>
+                                    <td>{{ st.action }}</td>
+                                </tr>
+                                {% endfor %}
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="terminal-output mt-3">
+                    <div class="terminal-bar"><i class="fa-solid fa-terminal"></i> C Binary Search JSON Output</div>
+                    <pre class="terminal-body" id="bsTabTerminalOutput">{{ bs_result | tojson(indent=2) }}</pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= TAB 7: C SOURCE CODE VIEWER ================= -->
+    <div class="algo-tab-content" id="source-code-tab">
+        <div class="algo-section-header">
+            <div class="algo-title-block">
+                <span class="algo-number">Source Code</span>
+                <h3>C Algorithm Source Code Files</h3>
+                <p>Inspect the actual C source code files powering the backend algorithms. Preserves original pointers, structs, and logic.</p>
+            </div>
+        </div>
+
+        <div class="code-viewer-container">
+            <div class="code-file-selector">
+                <button class="file-pill active" onclick="switchCodeFile('linked_list.c', this)">linked_list.c</button>
+                <button class="file-pill" onclick="switchCodeFile('queue.c', this)">queue.c</button>
+                <button class="file-pill" onclick="switchCodeFile('stack.c', this)">stack.c</button>
+                <button class="file-pill" onclick="switchCodeFile('priority_queue.c', this)">priority_queue.c</button>
+                <button class="file-pill" onclick="switchCodeFile('merge_sort.c', this)">merge_sort.c</button>
+                <button class="file-pill" onclick="switchCodeFile('binary_search.c', this)">binary_search.c</button>
+            </div>
+
+            <!-- Code displays for each file -->
+            {% for name, code in source_codes.items() %}
+            <div class="code-display-block {% if loop.first %}active{% endif %}" id="code_{{ name }}.c">
+                <div class="code-header">
+                    <span class="file-name"><i class="fa-solid fa-file-lines"></i> algorithms/{{ name }}.c</span>
+                    <button class="btn-sm btn-ghost" onclick="copyCodeBlock('code_pre_{{ name }}')">
+                        <i class="fa-regular fa-copy"></i> Copy Code
+                    </button>
+                </div>
+                <pre class="code-pre" id="code_pre_{{ name }}"><code>{{ code }}</code></pre>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    // Tab switching logic for ADS Hub
+    function switchAlgoTab(tabId, btn) {
+        document.querySelectorAll('.algo-tab-content').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.algo-tab-btn').forEach(el => el.classList.remove('active'));
+        
+        const target = document.getElementById(tabId);
+        if (target) {
+            target.classList.add('active');
+            btn.classList.add('active');
+        }
+    }
+
+    function switchCodeFile(filename, btn) {
+        document.querySelectorAll('.file-pill').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.code-display-block').forEach(el => el.classList.remove('active'));
+        
+        btn.classList.add('active');
+        const block = document.getElementById('code_' + filename);
+        if (block) block.classList.add('active');
+    }
+
+    function copyCodeBlock(preId) {
+        const text = document.getElementById(preId).innerText;
+        navigator.clipboard.writeText(text).then(() => {
+            alert("C Source Code copied to clipboard!");
+        });
+    }
+
+    // Interactive AJAX calls to test C algorithms live from UI
+    function testLinkedListInsert() {
+        const id = parseInt(document.getElementById('ll_id').value);
+        const title = document.getElementById('ll_title').value;
+        const priority = document.getElementById('ll_priority').value;
+        const deadline = document.getElementById('ll_deadline').value;
+
+        fetch('/api/algorithms/run', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                algorithm: 'linked_list',
+                action: 'batch',
+                custom_input: [
+                    {% for t in tasks %}
+                    {task_id: {{ t.task_id }}, title: {{ t.title|tojson }}, priority: {{ t.priority|tojson }}, deadline: {{ t.deadline_date|tojson if t.deadline_date else "2026-11-10"|tojson }}},
+                    {% endfor %}
+                    {task_id: id, title: title, priority: priority, deadline: deadline}
+                ]
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            document.getElementById('llTerminalOutput').innerText = JSON.stringify(data, null, 2);
+            renderLinkedListChain(data.tasks);
+        });
+    }
+
+    function testLinkedListDelete() {
+        const delId = parseInt(document.getElementById('ll_del_id').value);
+        if (!delId) return alert("Please enter Task ID to delete.");
+
+        fetch('/api/algorithms/run', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                algorithm: 'linked_list',
+                action: 'delete',
+                delete_id: delId
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            document.getElementById('llTerminalOutput').innerText = JSON.stringify(data, null, 2);
+            renderLinkedListChain(data.tasks);
+        });
+    }
+
+    function renderLinkedListChain(tasks) {
+        const container = document.getElementById('llChainContainer');
+        container.innerHTML = '';
+        if (tasks && tasks.length > 0) {
+            tasks.forEach(t => {
+                const node = document.createElement('div');
+                node.className = 'll-node animate-fade-in';
+                node.innerHTML = `
+                    <div class="node-data">
+                        <span class="node-id">ID: #${t.task_id}</span>
+                        <span class="node-title">${t.title}</span>
+                        <span class="node-prio prio-${t.priority.toLowerCase()}">${t.priority}</span>
+                    </div>
+                    <div class="node-pointer">
+                        <span>next</span>
+                        <i class="fa-solid fa-arrow-right-long"></i>
+                    </div>
+                `;
+                container.appendChild(node);
+            });
+        }
+        const nullNode = document.createElement('div');
+        nullNode.className = 'll-null-node';
+        nullNode.innerText = 'NULL';
+        container.appendChild(nullNode);
+    }
+
+    function testQueueEnqueue() {
+        const id = parseInt(document.getElementById('q_id').value);
+        const title = document.getElementById('q_title').value;
+        const priority = document.getElementById('q_priority').value;
+        const deadline = document.getElementById('q_deadline').value;
+
+        fetch('/api/algorithms/run', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                algorithm: 'queue',
+                action: 'batch',
+                custom_input: [
+                    {% for t in tasks if t.status == 'Pending' %}
+                    {task_id: {{ t.task_id }}, title: {{ t.title|tojson }}, priority: {{ t.priority|tojson }}, deadline: {{ t.deadline_date|tojson if t.deadline_date else "2026-11-10"|tojson }}},
+                    {% endfor %}
+                    {task_id: id, title: title, priority: priority, deadline: deadline}
+                ]
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            document.getElementById('queueTerminalOutput').innerText = JSON.stringify(data, null, 2);
+            renderQueueSlots(data.tasks);
+        });
+    }
+
+    function testQueueDequeue() {
+        fetch('/api/algorithms/run', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                algorithm: 'queue',
+                action: 'dequeue'
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            document.getElementById('queueTerminalOutput').innerText = JSON.stringify(data, null, 2);
+            renderQueueSlots(data.tasks);
+            if (data.dequeued_task) {
+                alert(`Task Dequeued via C FIFO Queue: #${data.dequeued_task.task_id} - ${data.dequeued_task.title}`);
+            }
+        });
+    }
+
+    function renderQueueSlots(tasks) {
+        const row = document.getElementById('queueSlotsRow');
+        row.innerHTML = '';
+        if (tasks && tasks.length > 0) {
+            tasks.forEach(t => {
+                const slot = document.createElement('div');
+                slot.className = 'queue-slot occupied animate-fade-in';
+                slot.innerHTML = `
+                    <span class="slot-idx">Pos ${t.position}</span>
+                    <span class="slot-id">#${t.task_id}</span>
+                    <span class="slot-title">${t.title}</span>
+                `;
+                row.appendChild(slot);
+            });
+        } else {
+            row.innerHTML = '<div class="empty-notice">Queue currently empty</div>';
+        }
+    }
+
+    function testStackPush() {
+        const id = parseInt(document.getElementById('stk_id').value);
+        const title = document.getElementById('stk_title').value;
+
+        fetch('/api/algorithms/run', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                algorithm: 'stack',
+                action: 'batch',
+                custom_input: [
+                    {% for t in completed_tasks %}
+                    {task_id: {{ t.task_id }}, title: {{ t.title|tojson }}, completed_at: {{ t.completed_at_str|tojson if t.completed_at_str else "Just now"|tojson }}},
+                    {% endfor %}
+                    {task_id: id, title: title, completed_at: new Date().toLocaleTimeString()}
+                ]
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            document.getElementById('stackTerminalOutput').innerText = JSON.stringify(data, null, 2);
+            renderStackTower(data.stack_history);
+        });
+    }
+
+    function testStackPop() {
+        fetch('/api/algorithms/run', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                algorithm: 'stack',
+                action: 'pop'
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            document.getElementById('stackTerminalOutput').innerText = JSON.stringify(data, null, 2);
+            renderStackTower(data.stack_history);
+            if (data.popped_task) {
+                alert(`Task Popped from C Stack (Undo): #${data.popped_task.task_id} - ${data.popped_task.title}`);
+            }
+        });
+    }
+
+    function renderStackTower(history) {
+        const tower = document.getElementById('stackTower');
+        tower.innerHTML = '';
+        if (history && history.length > 0) {
+            history.forEach((sh, idx) => {
+                const plate = document.createElement('div');
+                plate.className = 'stack-plate ' + (idx === 0 ? 'top-plate' : '') + ' animate-fade-in';
+                plate.innerHTML = `
+                    <div class="plate-level">Level ${sh.stack_level}</div>
+                    <div class="plate-title">#${sh.task_id}: ${sh.title}</div>
+                    <div class="plate-time">${sh.completed_at}</div>
+                `;
+                tower.appendChild(plate);
+            });
+        } else {
+            tower.innerHTML = '<div class="empty-notice">Stack is currently empty</div>';
+        }
+    }
+
+    function testPQInsert() {
+        const id = parseInt(document.getElementById('pq_id').value);
+        const title = document.getElementById('pq_title').value;
+        const priority = document.getElementById('pq_prio_select').value;
+        const deadline = document.getElementById('pq_deadline').value || '2026-11-10';
+
+        fetch('/api/algorithms/run', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                algorithm: 'priority_queue',
+                action: 'batch',
+                custom_input: [
+                    {% for t in tasks if t.status == 'Pending' %}
+                    {task_id: {{ t.task_id }}, title: {{ t.title|tojson }}, priority: {{ t.priority|tojson }}, deadline: {{ t.deadline_date|tojson if t.deadline_date else "2026-11-10"|tojson }}},
+                    {% endfor %}
+                    {task_id: id, title: title, priority: priority, deadline: deadline}
+                ]
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            document.getElementById('pqTerminalOutput').innerText = JSON.stringify(data, null, 2);
+            renderPQSchedule(data.priority_ordered_tasks);
+        });
+    }
+
+    function testPQExtractMax() {
+        fetch('/api/algorithms/run', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                algorithm: 'priority_queue',
+                action: 'extract'
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            document.getElementById('pqTerminalOutput').innerText = JSON.stringify(data, null, 2);
+            renderPQSchedule(data.priority_ordered_tasks);
+            if (data.extracted_task) {
+                alert(`Extracted Highest Priority Task from C Max-Heap: #${data.extracted_task.task_id} [Priority: ${data.extracted_task.priority}]`);
+            }
+        });
+    }
+
+    function renderPQSchedule(tasks) {
+        const body = document.getElementById('pqScheduleBody');
+        body.innerHTML = '';
+        if (tasks && tasks.length > 0) {
+            tasks.forEach(pt => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><strong>#${pt.rank}</strong></td>
+                    <td>#${pt.task_id}</td>
+                    <td>${pt.title}</td>
+                    <td><span class="badge-priority priority-${pt.priority.toLowerCase()}">${pt.priority}</span></td>
+                    <td><code>${pt.score}</code></td>
+                    <td>${pt.deadline}</td>
+                `;
+                body.appendChild(tr);
+            });
+        }
+    }
+
+    function testMergeSort() {
+        fetch('/api/algorithms/run', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({algorithm: 'merge_sort'})
+        })
+        .then(res => res.json())
+        .then(data => {
+            document.getElementById('msTerminalOutput').innerText = JSON.stringify(data, null, 2);
+            document.getElementById('ms_count').innerText = data.task_count;
+            document.getElementById('ms_merges').innerText = data.total_merges;
+            
+            const tbody = document.getElementById('msSortedBody');
+            tbody.innerHTML = '';
+            if (data.sorted_tasks) {
+                data.sorted_tasks.forEach(mt => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td><strong>#${mt.rank}</strong></td>
+                        <td><i class="fa-regular fa-clock"></i> ${mt.deadline}</td>
+                        <td>#${mt.task_id}</td>
+                        <td>${mt.title}</td>
+                        <td><span class="badge-priority priority-${mt.priority.toLowerCase()}">${mt.priority}</span></td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            }
+        });
+    }
+
+    function testBinarySearchTab() {
+        const target = parseInt(document.getElementById('bs_tab_target').value);
+        if (!target) return alert("Enter target ID.");
+
+        fetch('/api/algorithms/run', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({algorithm: 'binary_search', target_id: target})
+        })
+        .then(res => res.json())
+        .then(data => {
+            document.getElementById('bsTabTerminalOutput').innerText = JSON.stringify(data, null, 2);
+            const tbody = document.getElementById('bsTabStepsBody');
+            tbody.innerHTML = '';
+            if (data.search_steps && data.search_steps.length > 0) {
+                data.search_steps.forEach(st => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td><strong>Step ${st.step}</strong></td>
+                        <td>${st.low}</td>
+                        <td><code>${st.mid}</code></td>
+                        <td>${st.high}</td>
+                        <td><strong>#${st.mid_id}</strong></td>
+                        <td>${st.action}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            }
+        });
+    }
+</script>
+{% endblock %}
+
